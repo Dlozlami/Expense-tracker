@@ -1,50 +1,39 @@
-# This workflow will carry out a clean installation of node dependencies,
-# cache/restore them, build the source code and run tests across different
-# versions of node
-# For more information see:
-# https://docs.github.com/en/actions/automating-builds-and-tests
-# /building-and-testing-nodejs
-
 name: Firebase CI
 
 on:
   push:
-    branches: [ main,dev ]
+    branches: [main, dev]
   pull_request:
-    branches: [ main,dev]
+    branches: [main, dev]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         node-version: [18.x]
-  
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - run: npm install -g npm
-    - name: npm install, build and test
-      run: |
-        npm install
-        npm run build
-        npm test
-    - name: Archive Build
-      uses: actions/upload-artifact@v2
-      with:
-        name: build
-        path: build
-        
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm install -g npm
+      - name: npm install, build and test
+        run: |
+          npm install
+          npm run build
+          npm test
+      - name: Archive Build
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: build
+
   deploy:
     name: Deploy
     needs: build
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: Download Build
@@ -56,5 +45,18 @@ jobs:
         uses: w9jds/firebase-action@master
         with:
           args: deploy --only hosting
+        run: |
+          # Determine the Firebase Hosting Channel based on the branch name
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            CHANNEL="main"
+          elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+            CHANNEL="dev"
+          else
+            # If the branch is not main or dev, exit without deploying
+            echo "Branch does not exist."
+            exit 0
+          fi
+          # Deploy your application to the specified Hosting Channel
+          firebase hosting:channel:deploy "$CHANNEL" --token "$FIREBASE_TOKEN"
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
