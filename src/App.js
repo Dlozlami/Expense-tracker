@@ -11,8 +11,13 @@ function App() {
     console.log(transactions);
   };
 
+  const testFunc = ()=>{
+    return 6;
+  }
+  
   return (
     <div className="container">
+      <div>learn react in {testFunc} months</div>
       <DisplayTransaction transactions={transactions}/>
       <AddTransaction addItem={add}/>
     </div>
