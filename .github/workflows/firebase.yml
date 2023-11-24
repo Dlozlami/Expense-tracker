@@ -42,9 +42,6 @@ jobs:
           name: build
           path: build
       - name: Deploy to Firebase
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy --only hosting
         run: |
           # Determine the Firebase Hosting Channel based on the branch name
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
